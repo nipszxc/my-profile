@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Profile</title>
+<style>
+body {
+  margin:0;
+  font-family:Arial;
+  background:#020617;
+  color:white;
+  overflow:hidden;
+}
+
+/* GLOBAL TRANSITION */
+* { transition: all 0.4s ease; }
+
+/* INTRO SCREEN */
+#intro {
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background: radial-gradient(circle, #0f172a, #020617);
+}
+
+#intro h1 {
+  font-size:50px;
+  text-shadow:0 0 20px #38bdf8;
+}
+
+#intro button {
+  padding:15px 30px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  background:#38bdf8;
+  color:black;
+  cursor:pointer;
+}
+
+#intro button:hover {
+  transform:scale(1.1);
+  box-shadow:0 0 20px #38bdf8;
+}
+
+/* DASHBOARD LAYOUT */
+#dashboard {
+  display:none;
+  height:100vh;
+  flex-direction:row; /* Side-by-side */
+  justify-content:space-around; /* Balance left and right */
+  align-items:center; 
+  padding: 0 40px; 
+  gap: 20px;
+}
+
+h2 {
+  font-size:32px;
+  text-shadow:0 0 10px #38bdf8;
+}
+
+.btn {
+  padding:15px;
+  width:250px;
+  background:#0f172a;
+  border:2px solid #38bdf8;
+  color:#38bdf8;
+  font-size:18px;
+  letter-spacing:2px;
+  cursor:pointer;
+  text-align: left; 
+}
+
+.btn:hover {
+  background:#38bdf8;
+  color:black;
+  transform:scale(1.05); 
+  box-shadow:0 0 15px #38bdf8;
+}
+
+/* WEAPON AREA (RIGHT SIDE) */
+.weapon-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  transform: translateX(20px);
+}
+
+.vandal-v2 {
+  width: 500px; /* Scale the weapon */
+  height: 300px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 2;
+}
+
+.vandal-v2 path, .vandal-v2 rect {
+    transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.vandal-v2:hover {
+  transform: scale(1.03);
+  box-shadow: 0 0 30px rgba(56, 189, 248, 0.4);
+}
+
+.vandal-v2:active {
+  transform: scale(0.98);
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
+}
+
+/* FIRE/RECOIL ANIMATION */
+@keyframes VandalFiring {
+  0% { transform: translateY(0); }
+  25% { transform: translateY(-3px); }
+  50% { transform: translateY(-1px); }
+  75% { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
+.weapon-column:active .vandal-v2 {
+  animation: VandalFiring 0.3s ease;
+}
+
+#muzzle-flash {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#muzzle-flash.flash {
+  opacity: 1;
+}
+
+.hero-text {
+  font-size: 14px;
+  color: #94a3b8;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* INTERACTION FEEDBACK */
+#click-feedback {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(2, 6, 23, 0.95);
+  padding: 20px 30px;
+  border-radius: 10px;
+  font-weight: bold;
+  color: #ffffff;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 10;
+  white-space: nowrap;
+  letter-spacing: 2px;
+  border: 1px solid #38bdf8;
+  box-shadow: 0 0 40px #38bdf8;
+}
+
+#click-feedback.active {
+  animation: feedbackFade 1.5s ease forwards, screenShake 0.1s ease 0s infinite;
+}
+
+@keyframes feedbackFade {
+  0% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+  80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+}
+
+@keyframes screenShake {
+  0% { transform: translate(-50%, -50%) translate(0,0); }
+  25% { transform: translate(-50%, -50%) translate(2px,-2px); }
+  50% { transform: translate(-50%, -50%) translate(0,2px); }
+  75% { transform: translate(-50%, -50%) translate(-2px,0); }
+  100% { transform: translate(-50%, -50%) translate(0,0); }
+}
+
+/* CONTENT */
+.content {
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:#020617;
+  opacity:0;
+  transform:translateY(30px);
+  pointer-events:none;
+}
+
+.content.active {
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+
+.back {
+  margin-top:20px;
+  padding:10px 20px;
+  background:#38bdf8;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.back:hover {
+  box-shadow:0 0 15px #38bdf8;
+}
+
+/* BACKGROUND ANIMATION */
+.bg {
+  position:absolute;
+  width:100%;
+  height:100%;
+  background: radial-gradient(circle at 20% 20%, rgba(56,189,248,0.1), transparent),
+              radial-gradient(circle at 80% 80%, rgba(56,189,248,0.1), transparent);
+  animation: moveBG 10s infinite alternate;
+  z-index:-1;
+}
+
+@keyframes moveBG {
+  from { transform: translate(0,0); }
+  to { transform: translate(-50px,-50px); }
+}
+
+#cursorGlow {
+  position:fixed;
+  width:200px;
+  height:200px;
+  background:radial-gradient(circle, rgba(56,189,248,0.25), transparent 70%);
+  pointer-events:none;
+  transform:translate(-50%, -50%);
+  z-index:0;
+}
+
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div id="intro">
+  <h1>WELCOME TO MY PROFILE</h1>
+  <button onclick="showDashboard()">START</button>
+</div>
+
+<div id="dashboard">
+  
+  <div class="profile-column" style="display:flex; flex-direction:column; gap:20px;">
+    <div style="display:flex; align-items:center; gap:30px; padding-left: 20px;">
+      <img src="D:\Desktop\my-profile\264ea575-91bb-4899-8557-c6e2105ecc7e.jpg" alt="Profile" style="width:220px; height:220px; border-radius:50%; border:3px solid #38bdf8; box-shadow:0 0 25px #38bdf8;">
+      <div>
+        <h2 style="margin:0; font-size:62px; line-height: 1.4;">John Gil D. Fumar</h2>
+        <p style="max-width: 550px; padding-left: 15px; text-align: left; line-height: 1.4; color: #94a3b8; font-size: 17px; margin: 0 auto;">
+Birth: March 09, 2001</p>
+        <p style="max-width: 550px; padding-left: 15px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 0 auto;">Address: Palo, Leyte, Philippines</p>
+      </div>
+    </div>  
+    
+
+
+    <div style="margin-top:10px; display:flex; flex-direction:column; gap:15px; padding-left: 60px;">
+      <button class="btn" onclick="openSection('bio')">BIO</button>
+      <button class="btn" onclick="openSection('skills')">SKILLS</button>
+      <button class="btn" onclick="openSection('projects')">PROJECTS</button>
+      <button class="btn" onclick="openSection('contact')">CONTACT</button>
+    </div>
+  </div>
+
+  <div class="weapon-column">
+    <svg class="vandal-v2" onclick="vandalInteract()" viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg">
+      <circle id="muzzle-flash" cx="15" cy="85" r="12" fill="#38bdf8">
+          <animate attributeName="r" from="12" to="18" dur="0.1s" begin="flash" repeatCount="1"/>
+      </circle>
+      
+      <rect x="30" y="80" width="220" height="10" fill="#ffffff" stroke="none"/>
+      <rect x="20" y="78" width="10" height="14" fill="#38bdf8" stroke="none"/>
+      <path d="M120,70 L250,70 L250,95 L120,95 L115,85 Z" fill="#0f172a" stroke="#ffffff" stroke-width="1.5"/>
+      <path d="M130,68 L240,68" stroke="#ffffff" stroke-width="1"/> <path d="M250,70 L350,60 L360,110 L250,110 L250,95 Z" fill="#b91c1c" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="290" y="75" width="40" height="15" fill="#38bdf8" stroke="none"/> <rect x="310" y="80" width="5" height="5" fill="#ffffff" stroke="none"/> <path d="M300,110 L330,110 L320,160 L280,160 Z" fill="#0f172a" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="295" y="115" width="25" height="35" fill="#ffffff" stroke="none"/> <path d="M275,108 L300,108 L295,120 L275,120 Z" fill="#ffffff" stroke="none"/> <path d="M350,60 L480,55 L490,120 L450,130 L400,115 L360,110 Z" fill="#b91c1c" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="420" y="70" width="50" height="40" fill="#0f172a" stroke="none"/> <path d="M230,95 L280,110 L260,160 L210,145 L225,115 Z" fill="#0f172a" stroke="#ffffff" stroke-width="1.5"/>
+      <rect x="225" y="105" width="45" height="10" fill="#ffffff" stroke="none"/> </svg>
+    <p class="hero-text">"Confirmed Headshot!"</p>
+    <p class="hero-text">[CLICK TO SHOOT]</p>
+  </div>
+
+</div> 
+
+<div id="cursorGlow"></div>
+
+<div id="click-feedback"></div>
+
+<div id="bio" class="content">
+  <h2 style="margin-bottom: 20px;">ABOUT ME</h2>
+  <p style="max-width: 550px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 0 auto;">
+    I am an Information Technology student with a deep-rooted passion for the world of competitive gaming. 
+When I’m not diving into my studies, you’ll find me in the server, honing my skills and competing at a high level.
+</p>
+
+<p style="max-width: 550px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 1 auto;">
+My gaming journey is defined by a drive for excellence in tactical and strategic titles. 
+While I’m a dedicated player in Counter-Strike and Valorant, my true expertise lies in DOTA 2. 
+</p>
+<p style="max-width: 550px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 0;">
+My commitment to the game has led me to victory in several local tournaments, where I’ve proven my ability to perform under pressure and lead a team to success.
+
+  </p>
+  <button class="back" onclick="goBack()" style="margin-top: 30px;">BACK</button>
+</div>
+<div id="skills" class="content">
+  <h2>SKILLS</h2>
+  <ul style="max-width: 550px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 0;">
+    <li>CSS</li>
+    <li>JavaScript</li>
+    <li>PHP</li>
+    <li>Map Awareness</li>
+    <li>Clutching</li>
+  </ul>
+  <button class="back" onclick="goBack()">BACK</button>
+</div>
+
+<div id="projects" class="content">
+  <h2>PROJECTS</h2><ul style="max-width: 550px; text-align: left; line-height: 1.8; color: #94a3b8; font-size: 17px; margin: 0;">
+    <li>Event Management System</li>
+    <li>Student Record System</li>
+  </ul>
+  <button class="back" onclick="goBack()">BACK</button>
+</div>
+
+<div id="contact" class="content">
+  <h2>CONTACT</h2>
+  <div style="text-align: center; max-width: 550px;">
+    <p style="line-height: 1.8; color: #94a3b8; font-size: 17px; margin-bottom: 20px;">
+      Email: cacqueswet@gmail.com
+    </p>
+    
+    <a href="mailto:cacqueswet@gmail.com?subject=Inquiry from Portfolio" 
+       style="text-decoration: none;">
+      <button class="btn" style="text-align: center; width: auto; padding: 15px 40px; display: inline-block;">
+        SEND MESSAGE
+      </button>
+	<p style="line-height: 1.8; color: #94a3b8; font-size: 10px; margin-bottom: 20px;">
+      "Send Button Does Not Work"
+    </p>
+    </a>
+  </div>
+  
+  <button class="back" onclick="goBack()" style="margin-top: 30px;">BACK</button>
+</div>
+
+<script>
+function showDashboard(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('dashboard').style.display='flex';
+}
+
+function openSection(id){
+  document.getElementById('dashboard').style.display='none';
+  let el = document.getElementById(id);
+  el.classList.add('active');
+}
+
+function goBack(){
+  document.querySelectorAll('.content').forEach(el=>el.classList.remove('active'));
+  document.getElementById('dashboard').style.display='flex';
+}
+
+// vandal interaction
+function vandalInteract() {
+    const feedback = document.getElementById('click-feedback');
+    const muzzle = document.getElementById('muzzle-flash');
+    const weapon = document.querySelector('.vandal-v2');
+    
+    // Choose tactical line
+    feedback.innerText = "[sound: VALORANT - AK Headshot! (Vandal) SFX]";
+    feedback.classList.add('active');
+    
+    // temporarily trigger flash/recoil (via CSS animation/active class)
+    muzzle.classList.add('flash');
+    
+    // remove effects after animation ends
+    setTimeout(() => {
+        feedback.classList.remove('active');
+        muzzle.classList.remove('flash');
+    }, 1500);
+}
+
+// mouse follow glow
+const glow = document.getElementById('cursorGlow');
+
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top = e.clientY + 'px';
+});
+</script>
+
+</body>
+</html>
